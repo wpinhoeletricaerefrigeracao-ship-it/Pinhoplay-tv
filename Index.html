@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pinhoplay</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#07090d;
+color:#fff;
+padding-bottom:80px
+}
+header{
+position:sticky;top:0;z-index:20;
+background:#090b10;
+padding:16px;
+border-bottom:1px solid #272b35
+}
+.logo{font-size:28px;font-weight:900}
+.logo span{color:#ff2028}
+.search{
+width:100%;margin-top:12px;padding:13px 16px;
+border-radius:12px;border:1px solid #333;
+background:#151820;color:#fff;font-size:16px
+}
+.hero{
+margin:16px;padding:25px;min-height:190px;
+border-radius:22px;
+background:linear-gradient(135deg,#260000,#090909);
+display:flex;flex-direction:column;justify-content:flex-end
+}
+.hero h1{font-size:34px;margin:0}
+.hero p{color:#ccc;margin:8px 0}
+.btn{
+border:0;border-radius:12px;padding:12px 18px;
+background:#e50914;color:#fff;font-weight:bold;font-size:15px
+}
+section{padding:8px 16px}
+h2{font-size:22px;margin:15px 0}
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+gap:13px
+}
+.card{
+background:#151821;border:1px solid #292d38;
+border-radius:17px;overflow:hidden;transition:.2s
+}
+.card:focus,.card:hover{
+transform:scale(1.04);
+outline:3px solid #fff
+}
+.poster{
+height:115px;display:flex;align-items:center;
+justify-content:center;font-size:48px;
+background:linear-gradient(135deg,#242936,#11141b)
+}
+.info{padding:12px}
+.info h3{margin:0 0 7px;font-size:17px}
+.info p{margin:0;font-size:13px;color:#aaa}
+.status{font-size:12px;color:#55e69b;margin-top:8px}
+.game-card .poster{
+background:linear-gradient(135deg,#29135d,#10172e)
+}
+.page{display:none}
+.page.active{display:block}
+
+nav{
+position:fixed;bottom:0;left:0;right:0;height:70px;
+background:#0c0f15;border-top:1px solid #292d38;
+display:flex;justify-content:space-around;
+align-items:center;z-index:30
+}
+nav button{
+background:none;border:0;color:#aaa;
+font-size:13px;font-weight:bold
+}
+nav button b{display:block;font-size:23px}
+nav button.active{color:#fff}
+
+@media(min-width:700px){
+.grid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.poster{height:145px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">PINHO<span>PLAY</span></div>
+<input class="search" id="search"
+placeholder="Buscar no Pinhoplay..."
+oninput="buscar(this.value)">
+</header>
+
+<main>
+
+<div id="inicio" class="page active">
+
+<div class="hero">
+<h1>Pinhoplay</h1>
+<p>Seu mundo de entretenimento</p>
+<button class="btn" onclick="abrirPagina('games')">
+🎮 Explorar Games
+</button>
+</div>
+
+<section>
+<h2>🔥 Em destaque</h2>
+
+<div class="grid">
+
+<div class="card">
+<div class="poster">🎬</div>
+<div class="info">
+<h3>Filmes</h3>
+<p>Entretenimento</p>
+<div class="status">● Catálogo</div>
+</div>
+</div>
+
+<div class="card">
+<div class="poster">🎵</div>
+<div class="info">
+<h3>Músicas</h3>
+<p>Players oficiais</p>
+<div class="status">● Online</div>
+</div>
+</div>
+
+<div class="card">
+<div class="poster">📺</div>
+<div class="info">
+<h3>TV</h3>
+<p>Conteúdo disponível</p>
+<div class="status">● Online</div>
+</div>
+</div>
+
+<div class="card" onclick="abrirPagina('games')">
+<div class="poster">🎮</div>
+<div class="info">
+<h3>Games</h3>
+<p>TV e celular</p>
+<div class="status">● Nova área</div>
+</div>
+</div>
+
+</div>
+</section>
+</div>
+
+
+<div id="games" class="page">
+
+<section>
+<h2>🎮 Games Pinhoplay</h2>
+<p style="color:#aaa">
+Área de jogos preparada para TV e celular.
+</p>
+
+<div class="grid" id="gameGrid">
+
+<div class="card game-card" onclick="jogar('Briga de Rua','🥊')">
+<div class="poster">🥊</div><div class="info"><h3>Briga de Rua</h3><p>Luta</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Arena Pinho','👊')">
+<div class="poster">👊</div><div class="info"><h3>Arena Pinho</h3><p>Luta arcade</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Ninja Arena','🥷')">
+<div class="poster">🥷</div><div class="info"><h3>Ninja Arena</h3><p>Ação</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Boxe Turbo','🥊')">
+<div class="poster">🥊</div><div class="info"><h3>Boxe Turbo</h3><p>Luta</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Corrida Neon','🏎️')">
+<div class="poster">🏎️</div><div class="info"><h3>Corrida Neon</h3><p>Corrida</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Rally Pinho','🚙')">
+<div class="poster">🚙</div><div class="info"><h3>Rally Pinho</h3><p>Corrida</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Moto Turbo','🏍️')">
+<div class="poster">🏍️</div><div class="info"><h3>Moto Turbo</h3><p>Corrida</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Kart Mania','🏁')">
+<div class="poster">🏁</div><div class="info"><h3>Kart Mania</h3><p>Corrida</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Pênalti Campeão','⚽')">
+<div class="poster">⚽</div><div class="info"><h3>Pênalti Campeão</h3><p>Futebol</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Gol de Ouro','🥅')">
+<div class="poster">🥅</div><div class="info"><h3>Gol de Ouro</h3><p>Futebol</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Basquete Pinho','🏀')">
+<div class="poster">🏀</div><div class="info"><h3>Basquete Pinho</h3><p>Esportes</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Nave Galáctica','🚀')">
+<div class="poster">🚀</div><div class="info"><h3>Nave Galáctica</h3><p>Arcade</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Asteroides','☄️')">
+<div class="poster">☄️</div><div class="info"><h3>Asteroides</h3><p>Espacial</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Snake Pinho','🐍')">
+<div class="poster">🐍</div><div class="info"><h3>Snake Pinho</h3><p>Arcade</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Pesca Pinho','🎣')">
+<div class="poster">🎣</div><div class="info"><h3>Pesca Pinho</h3><p>Pesca</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Memória Kids','🧠')">
+<div class="poster">🧠</div><div class="info"><h3>Memória Kids</h3><p>Raciocínio</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Fuga Radical','🚓')">
+<div class="poster">🚓</div><div class="info"><h3>Fuga Radical</h3><p>Ação</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Caça Galáctica','👾')">
+<div class="poster">👾</div><div class="info"><h3>Caça Galáctica</h3><p>Arcade</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Tanques de Guerra','💥')">
+<div class="poster">💥</div><div class="info"><h3>Tanques de Guerra</h3><p>Estratégia</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Aventura na Selva','🌴')">
+<div class="poster">🌴</div><div class="info"><h3>Aventura na Selva</h3><p>Aventura</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Pinho Racer','🏎️')">
+<div class="poster">🏎️</div><div class="info"><h3>Pinho Racer</h3><p>Velocidade</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Futebol Master','⚽')">
+<div class="poster">⚽</div><div class="info"><h3>Futebol Master</h3><p>Esporte</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Defesa Espacial','🛸')">
+<div class="poster">🛸</div><div class="info"><h3>Defesa Espacial</h3><p>Arcade</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Labirinto','🧩')">
+<div class="poster">🧩</div><div class="info"><h3>Labirinto</h3><p>Desafio</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Caça ao Tesouro','💎')">
+<div class="poster">💎</div><div class="info"><h3>Caça ao Tesouro</h3><p>Aventura</p><div class="status">● Game</div></div>
+</div>
+
+<div class="card game-card" onclick="jogar('Pinho Jump','🏃')">
+<div class="poster">🏃</div><div class="info"><h3>Pinho Jump</h3><p>Plataforma</p><div class="status">● Game</div></div>
+</div>
+
+</div>
+</section>
+</div>
+
+</main>
+
+<nav>
+<button class="active" onclick="abrirPagina('inicio',this)">
+<b>🏠</b>Início
+</button>
+
+<button onclick="abrirPagina('games',this)">
+<b>🎮</b>Games
+</button>
+
+<button onclick="document.getElementById('search').focus()">
+<b>🔎</b>Buscar
+</button>
+</nav>
+
+<script>
+function abrirPagina(id,botao){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+
+if(botao){
+document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+botao.classList.add('active');
+}
+window.scrollTo(0,0);
+}
+
+function buscar(texto){
+texto=texto.toLowerCase().trim();
+
+document.querySelectorAll('.card').forEach(card=>{
+const conteudo=card.innerText.toLowerCase();
+card.style.display=conteudo.includes(texto)?'block':'none';
+});
+}
+
+function jogar(nome,icone){
+alert(icone+" "+nome+
+"\n\nO jogo está no catálogo Pinhoplay.\nO motor jogável será conectado na próxima etapa.");
+}
+
+/* suporte básico ao controle da TV */
+document.addEventListener('keydown',function(e){
+if(e.key==='Escape'){
+abrirPagina('inicio');
+}
+});
+</script>
+
+</body>
+  </html>
