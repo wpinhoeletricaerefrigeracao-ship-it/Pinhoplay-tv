@@ -1,1 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Pinhoplay TV</title>
 
+<style>
+*{box-sizing:border-box}
+html,body{
+ margin:0;
+ padding:0;
+ background:#07111f;
+ color:#fff;
+ font-family:Arial,sans-serif;
+ min-height:100%;
+}
+body{overflow-x:hidden}
+
+header{
+ position:sticky;
+ top:0;
+ z-index:20;
+ background:rgba(7,17,31,.96);
+ border-bottom:1px solid #26384e;
+ padding:14px 18px;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:15px;
+}
+.logo{
+ font-size:25px;
+ font-weight:900;
+ color:#33d6ff;
+ white-space:nowrap;
+}
+.logo span{color:#fff}
+nav{
+ display:flex;
+ gap:8px;
+ overflow:auto;
+}
+button{
+ border:0;
+ cursor:pointer;
+ font-weight:700;
+}
+.navbtn{
+ padding:10px 16px;
+ border-radius:12px;
+ background:#14263b;
+ color:white;
+}
+.navbtn:focus,.navbtn:hover{
+ outline:3px solid #33d6ff;
+ background:#1e4264;
+ transform:scale(1.04);
+}
+
+.hero{
+ padding:34px 22px;
+ background:
+ radial-gradient(circle at 80% 20%,#123e67 0,transparent 35%),
+ linear-gradient(135deg,#081524,#101c32);
+}
+.hero h1{
+ margin:0 0 8px;
+ font-size:34px;
+}
+.hero p{
+ color:#a9bfd5;
+ max-width:700px;
+ font-size:16px;
+}
+
+.search{
+ padding:15px 20px 5px;
+}
+.search input{
+ width:100%;
+ padding:15px;
+ border-radius:14px;
+ border:1px solid #29425e;
+ background:#0d1b2b;
+ color:white;
+ font-size:16px;
+ outline:none;
+}
+.search input:focus{
+ border-color:#33d6ff;
+ box-shadow:0 0 0 3px rgba(51,214,255,.15);
+}
+
+section{padding:18px 20px}
+section h2{margin:0 0 15px}
+
+.grid{
+ display:grid;
+ grid-template-columns:repeat(auto-fill,minmax(175px,1fr));
+ gap:14px;
+}
+.card{
+ background:#101f31;
+ border:1px solid #223c57;
+ border-radius:17px;
+ overflow:hidden;
+ transition:.15s;
+ cursor:pointer;
+ min-height:190px;
+}
+.card:hover,.card:focus{
+ transform:scale(1.04);
+ border-color:#33d6ff;
+ outline:3px solid rgba(51,214,255,.3);
+}
+.poster{
+ height:112px;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:52px;
+ background:linear-gradient(135deg,#18314c,#0c1827);
+}
+.info{padding:12px}
+.info h3{
+ margin:0 0 5px;
+ font-size:16px;
+}
+.info small{color:#8ea8c0}
+.status{
+ color:#54e58b;
+ font-size:12px;
+ margin-top:7px;
+ font-weight:bold;
+}
+
+#gameScreen{
+ display:none;
+ position:fixed;
+ inset:0;
+ z-index:100;
+ background:#030912;
+}
+.gameTop{
+ height:62px;
+ padding:10px 15px;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ background:#0b1726;
+ border-bottom:1px solid #253c55;
+}
+.gameTitle{
+ font-weight:900;
+ font-size:19px;
+}
+.gameButtons{
+ display:flex;
+ gap:8px;
+}
+.gameButtons button{
+ padding:10px 14px;
+ border-radius:10px;
+ background:#19324c;
+ color:#fff;
+}
+.gameButtons button:focus{
+ outline:3px solid #33d6ff;
+}
+#canvasWrap{
+ height:calc(100% - 62px);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ position:relative;
+ overflow:hidden;
+}
+canvas{
+ background:#071523;
+ border:2px solid #1f4969;
+ border-radius:15px;
+ max-width:96vw;
+ max-height:72vh;
+ touch-action:none;
+}
+.instructions{
+ position:absolute;
+ bottom:12px;
+ left:50%;
+ transform:translateX(-50%);
+ background:rgba(0,0,0,.7);
+ padding:9px 13px;
+ border-radius:12px;
+ color:#d6e9f8;
+ font-size:13px;
+ text-align:center;
+ white-space:nowrap;
+}
+
+footer{
+ padding:35px 20px;
+ color:#7890a8;
+ text-align:center;
+}
+
+@media(max-width:600px){
+ .logo{font-size:20px}
+ header{align-items:flex-start;flex-direction:column}
+ .hero h1{font-size:27px}
+ .grid{grid-template-columns:repeat(2,1fr)}
+ .poster{height:95px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="logo">PINHO<span>PLAY</span> TV</div>
+ <nav>
+  <button class="navbtn" onclick="goHome()">Início</button>
+  <button class="navbtn" onclick="showGames()">🎮 Games</button>
+  <button class="navbtn" onclick="randomGame()">Aleatório</button>
+ </nav>
+</header>
+
+<div class="hero" id="home">
+ <h1>🎮 Pinhoplay Games</h1>
+ <p>
+  Central de minijogos para celular e TV.
+  Use o controle remoto, teclado ou toque na tela.
+ </p>
+</div>
+
+<div class="search">
+ <input id="search" placeholder="🔎 Procurar jogo..." oninput="filterGames()">
+</div>
+
+<section id="games">
+ <h2>🔥 50 jogos disponíveis</h2>
+ <div class="grid" id="gameGrid"></div>
+</section>
+
+<footer>
+ PINHOPLAY TV • Games Edition
+</footer>
+
+<div id="gameScreen">
+ <div class="gameTop">
+  <div class="gameTitle" id="gameTitle">Jogo</div>
+  <div class="gameButtons">
+   <button onclick="restartGame()">↻ Reiniciar</button>
+   <button onclick="closeGame()">✕ Sair</button>
+  </div>
+ </div>
+
+ <div id="canvasWrap">
+  <canvas id="gameCanvas" width="800" height="450"></canvas>
+  <div class="instructions">
+   ← ↑ ↓ → mover • ENTER/OK iniciar • celular: toque/arraste
+  </div>
+ </div>
+</div>
+
+<script>
+const games=[
+["Corrida Turbo","🏎️","Corrida",1],
+["Moto Racer","🏍️","Corrida",2],
+["Rally Pinho","🚙","Corrida",3],
+["Kart Master","🏁","Corrida",4],
+["Street Racer","🚗","Corrida",5],
+["Speed Challenge","⚡","Corrida",6],
+["Desert Rally","🏜️","Corrida",7],
+["Night Racer","🌙","Corrida",8],
+["Highway Turbo","🛣️","Corrida",9],
+["Formula Pinho","🏎️","Corrida",10],
+
+["Futebol Master","⚽","Esporte",11],
+["Penalty Pro","🥅","Esporte",12],
+["Basket Arena","🏀","Esporte",13],
+["Vôlei Mania","🏐","Esporte",14],
+["Tênis Challenge","🎾","Esporte",15],
+["Golf Master","⛳","Esporte",16],
+["Skate Radical","🛹","Esporte",17],
+["Bike Challenge","🚴","Esporte",18],
+
+["Tanques de Guerra","💥","Ação",19],
+["Defesa Espacial","🛸","Ação",20],
+["Space Battle","🚀","Ação",21],
+["Alien Attack","👾","Ação",22],
+["Robot Wars","🤖","Ação",23],
+["Ninja Pinho","🥷","Ação",24],
+["Castle Defense","🏰","Ação",25],
+["Dragon Battle","🐉","Ação",26],
+["Piratas","🏴‍☠️","Ação",27],
+["Missão Secreta","🕵️","Ação",28],
+
+["Aventura na Selva","🌴","Aventura",29],
+["Ilha Perdida","🏝️","Aventura",30],
+["Caça ao Tesouro","💎","Aventura",31],
+["Caverna Misteriosa","🪨","Aventura",32],
+["Mundo Jurássico","🦖","Aventura",33],
+["Safari","🦁","Aventura",34],
+["Aventura no Gelo","❄️","Aventura",35],
+["Floresta Encantada","🌲","Aventura",36],
+
+["Pesca Master","🎣","Pesca",37],
+["Pesca no Rio","🐟","Pesca",38],
+["Pesca Oceânica","🐠","Pesca",39],
+["Pescador Pro","🚤","Pesca",40],
+
+["Snake Pinho","🐍","Arcade",41],
+["Asteroides","☄️","Arcade",42],
+["Meteor Escape","🌠","Arcade",43],
+["Galaxy Runner","🌌","Arcade",44],
+["Cube Escape","🧊","Arcade",45],
+["Coin Hunter","🪙","Arcade",46],
+["Diamond Rush","💎","Arcade",47],
+["Maze Runner","🌀","Arcade",48],
+["Monster Escape","👹","Arcade",49],
+["Pinho Survival","🔥","Arcade",50]
+];
+
+const grid=document.getElementById("gameGrid");
+
+function render(list=games){
+ grid.innerHTML="";
+ list.forEach(g=>{
+  const card=document.createElement("div");
+  card.className="card";
+  card.tabIndex=0;
+  card.innerHTML=
+   '<div class="poster">'+g[1]+'</div>'+
+   '<div class="info">'+
+   '<h3>'+g[0]+'</h3>'+
+   '<small>'+g[2]+'</small>'+
+   '<div class="status">● JOGAR AGORA</div>'+
+   '</div>';
+
+  card.onclick=()=>openGame(g);
+  card.onkeydown=e=>{
+   if(e.key==="Enter")openGame(g);
+  };
+  grid.appendChild(card);
+ });
+}
+
+function filterGames(){
+ const q=document.getElementById("search").value.toLowerCase();
+ render(games.filter(g=>
+  g[0].toLowerCase().includes(q) ||
+  g[2].toLowerCase().includes(q)
+ ));
+}
+
+function goHome(){
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function showGames(){
+ document.getElementById("games").scrollIntoView({behavior:"smooth"});
+}
+function randomGame(){
+ openGame(games[Math.floor(Math.random()*games.length)]);
+}
+
+const screen=document.getElementById("gameScreen");
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
+
+let currentGame=null;
+let running=false;
+let player;
+let enemies=[];
+let score=0;
+let lives=3;
+let frame=0;
+let animationId=null;
+let keys={};
+
+function openGame(game){
+ currentGame=game;
+ document.getElementById("gameTitle").textContent=game[1]+" "+game[0];
+ screen.style.display="block";
+ document.body.style.overflow="hidden";
+ startGame();
+}
+
+function closeGame(){
+ running=false;
+ cancelAnimationFrame(animationId);
+ screen.style.display="none";
+ document.body.style.overflow="";
+}
+
+function restartGame(){
+ startGame();
+}
+
+function startGame(){
+ cancelAnimationFrame(animationId);
+
+ player={
+  x:canvas.width/2-20,
+  y:canvas.height-70,
+  w:40,
+  h:40,
+  speed:6
+ };
+
+ enemies=[];
+ score=0;
+ lives=3;
+ frame=0;
+ running=true;
+
+ loop();
+}
+
+function spawnEnemy(){
+ const difficulty=(currentGame[3]%10)+1;
+
+ enemies.push({
+  x:Math.random()*(canvas.width-35),
+  y:-40,
+  w:30+Math.random()*15,
+  h:30+Math.random()*15,
+  speed:2+(difficulty*.18)+Math.random()*2
+ });
+}
+
+function collision(a,b){
+ return(
+  a.x<b.x+b.w &&
+  a.x+a.w>b.x &&
+  a.y<b.y+b.h &&
+  a.y+a.h>b.y
+ );
+}
+
+function update(){
+ frame++;
+
+ if(keys["ArrowLeft"])player.x-=player.speed;
+ if(keys["ArrowRight"])player.x+=player.speed;
+ if(keys["ArrowUp"])player.y-=player.speed;
+ if(keys["ArrowDown"])player.y+=player.speed;
+
+ player.x=Math.max(0,Math.min(canvas.width-player.w,player.x));
+ player.y=Math.max(0,Math.min(canvas.height-player.h,player.y));
+
+ let spawnRate=Math.max(24,55-(currentGame[3]%10)*2);
+
+ if(frame%spawnRate===0)spawnEnemy();
+
+ enemies.forEach(e=>e.y+=e.speed);
+
+ for(let i=enemies.length-1;i>=0;i--){
+  let e=enemies[i];
+
+  if(collision(player,e)){
+   enemies.splice(i,1);
+   lives--;
+
+   if(lives<=0){
+    lives=3;
+    score=0;
+    enemies=[];
+   }
+   continue;
+  }
+
+  if(e.y>canvas.height){
+   enemies.splice(i,1);
+   score+=10;
+  }
+ }
+}
+
+function drawBackground(){
+ ctx.fillStyle="#071523";
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ ctx.fillStyle="rgba(255,255,255,.13)";
+
+ for(let i=0;i<35;i++){
+  let x=(i*83)%canvas.width;
+  let y=(i*47+frame*2)%canvas.height;
+  ctx.fillRect(x,y,2,5);
+ }
+}
+
+function draw(){
+ drawBackground();
+
+ ctx.font="30px Arial";
+ ctx.textAlign="center";
+ ctx.fillText(currentGame[1],player.x+player.w/2,player.y+32);
+
+ ctx.fillStyle="#ff4f62";
+
+ enemies.forEach(e=>{
+  ctx.beginPath();
+  ctx.arc(e.x+e.w/2,e.y+e.h/2,e.w/2,0,Math.PI*2);
+  ctx.fill();
+ });
+
+ ctx.textAlign="left";
+ ctx.fillStyle="white";
+ ctx.font="bold 18px Arial";
+ ctx.fillText("Pontos: "+score,18,28);
+ ctx.fillText("Vidas: "+lives,18,52);
+
+ ctx.textAlign="right";
+ ctx.fillStyle="#33d6ff";
+ ctx.fillText(currentGame[0],canvas.width-18,28);
+}
+
+function loop(){
+ if(!running)return;
+
+ update();
+ draw();
+
+ animationId=requestAnimationFrame(loop);
+}
+
+document.addEventListener("keydown",e=>{
+ keys[e.key]=true;
+
+ if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key)){
+  e.preventDefault();
+ }
+ if(e.key==="Escape" && screen.style.display==="block"){
+  closeGame();
+ }
+});
+
+document.addEventListener("keyup",e=>{
+ keys[e.key]=false;
+});
+
+let touching=false;
+
+function pointerPosition(e){
+ const rect=canvas.getBoundingClientRect();
+
+ const cx=e.touches?e.touches[0].clientX:e.clientX;
+ const cy=e.touches?e.touches[0].clientY:e.clientY;
+
+ return{
+  x:(cx-rect.left)*(canvas.width/rect.width),
+  y:(cy-rect.top)*(canvas.height/rect.height)
+ };
+}
+
+function moveTouch(e){
+ if(!currentGame)return;
+
+ const p=pointerPosition(e);
+ player.x=p.x-player.w/2;
+ player.y=p.y-player.h/2;
+
+ e.preventDefault();
+}
+
+canvas.addEventListener("touchstart",e=>{
+ touching=true;
+ moveTouch(e);
+},{passive:false});
+
+canvas.addEventListener("touchmove",e=>{
+ if(touching)moveTouch(e);
+},{passive:false});
+
+canvas.addEventListener("touchend",()=>{
+ touching=false;
+});
+
+canvas.addEventListener("mousedown",e=>{
+ touching=true;
+ moveTouch(e);
+});
+
+canvas.addEventListener("mousemove",e=>{
+ if(touching)moveTouch(e);
+});
+
+canvas.addEventListener("mouseup",()=>{
+ touching=false;
+});
+
+render();
+</script>
+
+</body>
+  </html>
