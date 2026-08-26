@@ -1,1 +1,1275 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pinhoplay V33 • Games</title>
 
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:#07090d;
+color:white;
+font-family:Arial,sans-serif;
+}
+
+header{
+position:sticky;
+top:0;
+z-index:20;
+padding:14px;
+background:#0b0e13;
+border-bottom:1px solid #252a35;
+}
+
+.logo{
+font-size:29px;
+font-weight:900;
+}
+
+.logo span{
+color:#ef1f2f;
+}
+
+.sub{
+font-size:13px;
+color:#aab1bd;
+margin-top:4px;
+}
+
+#games{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(175px,1fr));
+gap:12px;
+padding:15px;
+}
+
+.card{
+background:#131821;
+border:1px solid #29303d;
+border-radius:16px;
+overflow:hidden;
+cursor:pointer;
+outline:none;
+transition:.15s;
+}
+
+.card:focus,
+.card:hover{
+transform:scale(1.04);
+box-shadow:0 0 0 3px white;
+}
+
+.thumb{
+height:120px;
+display:grid;
+place-items:center;
+font-size:55px;
+background:linear-gradient(135deg,#261052,#0c2338);
+}
+
+.info{
+padding:11px;
+}
+
+.info b{
+font-size:16px;
+display:block;
+}
+
+.info small{
+display:block;
+margin-top:5px;
+color:#72e8a4;
+}
+
+#player{
+position:fixed;
+inset:0;
+z-index:100;
+background:#04070b;
+display:none;
+flex-direction:column;
+}
+
+#player.open{
+display:flex;
+}
+
+.top{
+height:60px;
+display:flex;
+align-items:center;
+gap:10px;
+padding:8px 12px;
+background:#0d1219;
+border-bottom:1px solid #28303d;
+}
+
+.top h3{
+margin:0;
+flex:1;
+}
+
+#score{
+font-weight:900;
+color:#6df0a8;
+}
+
+button{
+border:0;
+border-radius:10px;
+padding:10px 13px;
+font-weight:900;
+cursor:pointer;
+}
+
+canvas{
+width:100%;
+height:calc(100vh - 60px);
+background:#07101b;
+touch-action:none;
+}
+
+.ajuda{
+padding:10px 15px;
+font-size:13px;
+color:#b4bbc8;
+}
+
+@media(max-width:600px){
+#games{
+grid-template-columns:1fr 1fr;
+}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="logo">PINHO<span>PLAY</span> 🎮</div>
+<div class="sub">50 Games • TV + celular</div>
+</header>
+
+<div class="ajuda">
+TV: use as setas e OK. Celular: toque ou arraste na tela.
+</div>
+
+<div id="games"></div>
+
+<div id="player">
+
+<div class="top">
+<h3 id="gameTitle">Game</h3>
+<span id="score">Pontos: 0</span>
+<button id="restart">↻</button>
+<button id="close">✕</button>
+</div>
+
+<canvas id="canvas" width="1280" height="720"></canvas>
+
+</div>
+
+<script>
+
+const LISTA = [
+
+["Briga de Rua","🥊","fight"],
+["Arena Pinho","👊","fight"],
+["Ninja Arena","🥷","fight"],
+["Boxe Turbo","🥊","fight"],
+["Samurai Pinho","⚔️","fight"],
+
+["Corrida Neon","🏎️","dodge"],
+["Rally Pinho","🚙","dodge"],
+["Moto Turbo","🏍️","dodge"],
+["Kart Mania","🏁","dodge"],
+["Fuga Radical","🚓","dodge"],
+
+["Pênalti Campeão","⚽","goal"],
+["Gol de Ouro","🥅","goal"],
+["Futebol Master","⚽","goal"],
+["Chute Livre","🥾","goal"],
+["Basquete Pinho","🏀","goal"],
+
+["Nave Galáctica","🚀","shooter"],
+["Defesa Espacial","🛸","shooter"],
+["Asteroides","☄️","shooter"],
+["Caça Galáctica","👾","shooter"],
+["Laser Force","🔫","shooter"],
+
+["Snake Pinho","🐍","snake"],
+["Cobra Turbo","🐍","snake"],
+["Snake Neon","🟢","snake"],
+["Cobra da Selva","🌴","snake"],
+["Snake Kids","🍎","snake"],
+
+["Pesca Pinho","🎣","catch"],
+["Pescaria no Lago","🐟","catch"],
+["Pesca Turbo","🐠","catch"],
+["Peixe Dourado","🐡","catch"],
+["Mestre da Pesca","🎣","catch"],
+
+["Caça ao Tesouro","💰","catch"],
+["Pegue as Estrelas","⭐","catch"],
+["Frutas Mania","🍓","catch"],
+["Moedas Pinho","🪙","catch"],
+["Diamante Rush","💎","catch"],
+
+["Desvia Blocos","🧱","dodge"],
+["Queda Neon","💠","dodge"],
+["Sobrevivência","⚡","dodge"],
+["Pinho Dash","🏃","dodge"],
+["Relâmpago","🌩️","dodge"],
+
+["Robôs em Combate","🤖","fight"],
+["Herói da Arena","🛡️","fight"],
+["Monstros Arcade","👹","fight"],
+["Duelo Final","🔥","fight"],
+["Batalha Kids","🦸","fight"],
+
+["Invasores Pinho","👾","shooter"],
+["Foguete Turbo","🚀","shooter"],
+["Defesa Lunar","🌙","shooter"],
+["Galáxia Pinho","🌌","shooter"],
+["Cometa Rush","☄️","shooter"]
+
+];
+
+const games = document.getElementById("games");
+
+LISTA.forEach((g,i)=>{
+
+games.innerHTML += `
+
+<div class="card"
+tabindex="0"
+data-id="${i}">
+
+<div class="thumb">${g[1]}</div>
+
+<div class="info">
+<b>${g[0]}</b>
+<small>● Jogar agora</small>
+</div>
+
+</div>
+
+`;
+
+});
+
+document.querySelectorAll(".card").forEach(card=>{
+
+card.onclick=()=>abrir(+card.dataset.id);
+
+card.onkeydown=e=>{
+if(e.key==="Enter"){
+abrir(+card.dataset.id);
+}
+};
+
+});
+
+const player=document.getElementById("player");
+
+const canvas=document.getElementById("canvas");
+
+const ctx=canvas.getContext("2d");
+
+const titulo=document.getElementById("gameTitle");
+
+const score=document.getElementById("score");
+
+let jogo=null;
+
+let teclas={};
+
+let estado={};
+
+let animacao=0;
+
+function abrir(id){
+
+jogo=LISTA[id];
+
+titulo.textContent=jogo[1]+" "+jogo[0];
+
+player.classList.add("open");
+
+iniciar();
+
+}
+
+function fechar(){
+
+cancelAnimationFrame(animacao);
+
+player.classList.remove("open");
+
+jogo=null;
+
+}
+
+function iniciar(){
+
+cancelAnimationFrame(animacao);
+
+teclas={};
+
+estado={
+
+tempo:0,
+
+pontos:0,
+
+player:{
+x:640,
+y:610
+},
+
+enemy:{
+x:640,
+y:170
+},
+
+ball:{
+x:640,
+y:520,
+vx:0,
+vy:0
+},
+
+objetos:[]
+
+};
+
+if(jogo[2]==="snake"){
+
+estado.snake=[
+{x:10,y:10}
+];
+
+estado.dir={
+x:1,
+y:0
+};
+
+estado.food={
+x:18,
+y:10
+};
+
+}
+
+loop();
+
+}
+
+function fundo(){
+
+const g=ctx.createLinearGradient(
+0,0,
+1280,720
+);
+
+g.addColorStop(
+0,
+"#071426"
+);
+
+g.addColorStop(
+1,
+"#2a1235"
+);
+
+ctx.fillStyle=g;
+
+ctx.fillRect(
+0,0,
+1280,720
+);
+
+}
+
+function limite(v,min,max){
+
+return Math.max(
+min,
+Math.min(max,v)
+);
+
+}
+
+function mover(){
+
+if(
+teclas.ArrowLeft
+){
+estado.player.x-=10;
+}
+
+if(
+teclas.ArrowRight
+){
+estado.player.x+=10;
+}
+
+if(
+teclas.ArrowUp
+){
+estado.player.y-=8;
+}
+
+if(
+teclas.ArrowDown
+){
+estado.player.y+=8;
+}
+
+estado.player.x=
+limite(
+estado.player.x,
+35,
+1245
+);
+
+estado.player.y=
+limite(
+estado.player.y,
+70,
+685
+);
+
+}
+
+function loop(){
+
+if(!jogo)return;
+
+estado.tempo++;
+
+ctx.clearRect(
+0,0,
+1280,720
+);
+
+fundo();
+
+mover();
+
+const tipo=jogo[2];
+
+if(tipo==="fight"){
+luta();
+}
+
+if(tipo==="dodge"){
+desviar();
+}
+
+if(tipo==="goal"){
+gol();
+}
+
+if(tipo==="shooter"){
+nave();
+}
+
+if(tipo==="snake"){
+snake();
+}
+
+if(tipo==="catch"){
+coletar();
+}
+
+score.textContent=
+"Pontos: "+
+Math.floor(
+estado.pontos
+);
+
+animacao=
+requestAnimationFrame(
+loop
+);
+
+}
+
+/* ==========================
+LUTA
+========================== */
+
+function luta(){
+
+estado.enemy.x +=
+Math.sin(
+estado.tempo/25
+)*6;
+
+ctx.font=
+"85px sans-serif";
+
+ctx.fillText(
+"🥷",
+estado.enemy.x-40,
+estado.enemy.y+30
+);
+
+ctx.fillText(
+jogo[1],
+estado.player.x-40,
+estado.player.y+25
+);
+
+ctx.font=
+"25px sans-serif";
+
+ctx.fillStyle=
+"white";
+
+ctx.fillText(
+"Aproxime-se do adversário e aperte OK para atacar",
+320,
+55
+);
+
+if(
+teclas.acao &&
+Math.hypot(
+estado.player.x-
+estado.enemy.x,
+
+estado.player.y-
+estado.enemy.y
+)<190
+){
+
+estado.pontos+=1.5;
+
+}
+
+}
+
+/* ==========================
+CORRIDA / DESVIO
+========================== */
+
+function desviar(){
+
+ctx.strokeStyle=
+"#ffffff33";
+
+ctx.lineWidth=5;
+
+ctx.setLineDash(
+[30,30]
+);
+
+ctx.beginPath();
+
+ctx.moveTo(
+640,0
+);
+
+ctx.lineTo(
+640,720
+);
+
+ctx.stroke();
+
+ctx.setLineDash([]);
+
+if(
+estado.tempo%34===0
+){
+
+estado.objetos.push({
+
+x:
+60+
+Math.random()*1160,
+
+y:-40,
+
+vel:
+7+
+Math.random()*5
+
+});
+
+}
+
+estado.objetos.forEach(
+o=>{
+
+o.y+=o.vel;
+
+ctx.font=
+"48px sans-serif";
+
+ctx.fillText(
+"🧱",
+o.x-22,
+o.y
+);
+
+if(
+Math.hypot(
+o.x-
+estado.player.x,
+
+o.y-
+estado.player.y
+)<48
+){
+
+o.dead=true;
+
+estado.pontos=
+Math.max(
+0,
+estado.pontos-10
+);
+
+}
+
+});
+
+estado.objetos=
+estado.objetos.filter(
+o=>
+!o.dead &&
+o.y<760
+);
+
+ctx.font=
+"60px sans-serif";
+
+ctx.fillText(
+jogo[1],
+estado.player.x-30,
+estado.player.y+20
+);
+
+estado.pontos+=0.1;
+
+}
+
+/* ==========================
+FUTEBOL / GOL
+========================== */
+
+function gol(){
+
+ctx.fillStyle=
+"white";
+
+ctx.fillRect(
+420,90,
+440,10
+);
+
+ctx.fillRect(
+420,90,
+10,160
+);
+
+ctx.fillRect(
+850,90,
+10,160
+);
+
+ctx.font=
+"68px sans-serif";
+
+ctx.fillText(
+"🥅",
+605,
+180
+);
+
+ctx.fillText(
+"⚽",
+estado.ball.x-30,
+estado.ball.y+22
+);
+
+ctx.fillText(
+"🥾",
+estado.player.x-25,
+630
+);
+
+if(
+teclas.acao &&
+Math.abs(
+estado.ball.vy
+)<0.1
+){
+
+estado.ball.vy=-14;
+
+estado.ball.vx=
+(
+estado.player.x-
+640
+)/35;
+
+}
+
+estado.ball.x+=
+estado.ball.vx;
+
+estado.ball.y+=
+estado.ball.vy;
+
+estado.ball.vy+=
+0.35;
+
+if(
+estado.ball.y<250 &&
+estado.ball.x>430 &&
+estado.ball.x<850
+){
+
+estado.pontos+=100;
+
+estado.ball={
+
+x:640,
+
+y:520,
+
+vx:0,
+
+vy:0
+
+};
+
+}
+
+if(
+estado.ball.y>760
+){
+
+estado.ball={
+
+x:640,
+
+y:520,
+
+vx:0,
+
+vy:0
+
+};
+
+}
+
+}
+
+/* ==========================
+NAVE
+========================== */
+
+function nave(){
+
+if(
+estado.tempo%40===0
+){
+
+estado.objetos.push({
+
+x:
+50+
+Math.random()*1180,
+
+y:-20,
+
+vel:4,
+
+enemy:true
+
+});
+
+}
+
+if(
+teclas.acao &&
+estado.tempo%7===0
+){
+
+estado.objetos.push({
+
+x:
+estado.player.x,
+
+y:
+estado.player.y-30,
+
+vel:-14,
+
+shot:true
+
+});
+
+}
+
+estado.objetos.forEach(
+o=>{
+
+o.y+=o.vel;
+
+ctx.font=
+o.shot
+?
+"24px sans-serif"
+:
+"46px sans-serif";
+
+ctx.fillText(
+
+o.shot
+?
+"🔴"
+:
+"👾",
+
+o.x-18,
+
+o.y
+
+);
+
+});
+
+const tiros=
+estado.objetos.filter(
+o=>o.shot
+);
+
+const inimigos=
+estado.objetos.filter(
+o=>o.enemy
+);
+
+tiros.forEach(
+a=>{
+
+inimigos.forEach(
+b=>{
+
+if(
+Math.hypot(
+a.x-b.x,
+a.y-b.y
+)<38
+){
+
+a.dead=true;
+
+b.dead=true;
+
+estado.pontos+=20;
+
+}
+
+});
+
+});
+
+estado.objetos=
+estado.objetos.filter(
+o=>
+!o.dead &&
+o.y>-50 &&
+o.y<760
+);
+
+ctx.font=
+"60px sans-serif";
+
+ctx.fillText(
+"🚀",
+estado.player.x-30,
+estado.player.y+20
+);
+
+}
+
+/* ==========================
+PESCA / COLETA
+========================== */
+
+function coletar(){
+
+const premios=[
+"⭐",
+"💎",
+"🐟",
+"🍎",
+"🪙"
+];
+
+if(
+estado.tempo%34===0
+){
+
+estado.objetos.push({
+
+x:
+50+
+Math.random()*1180,
+
+y:-20,
+
+vel:
+5+
+Math.random()*4,
+
+icone:
+premios[
+Math.floor(
+Math.random()*
+premios.length
+)
+]
+
+});
+
+}
+
+estado.objetos.forEach(
+o=>{
+
+o.y+=o.vel;
+
+ctx.font=
+"46px sans-serif";
+
+ctx.fillText(
+o.icone,
+o.x-20,
+o.y
+);
+
+if(
+Math.hypot(
+o.x-
+estado.player.x,
+
+o.y-
+estado.player.y
+)<55
+){
+
+o.dead=true;
+
+estado.pontos+=10;
+
+}
+
+});
+
+estado.objetos=
+estado.objetos.filter(
+o=>
+!o.dead &&
+o.y<760
+);
+
+ctx.font=
+"58px sans-serif";
+
+ctx.fillText(
+"🧺",
+estado.player.x-30,
+estado.player.y+20
+);
+
+}
+
+/* ==========================
+SNAKE
+========================== */
+
+function snake(){
+
+if(
+teclas.ArrowLeft &&
+estado.dir.x!==1
+){
+
+estado.dir={
+x:-1,
+y:0
+};
+
+}
+
+if(
+teclas.ArrowRight &&
+estado.dir.x!==-1
+){
+
+estado.dir={
+x:1,
+y:0
+};
+
+}
+
+if(
+teclas.ArrowUp &&
+estado.dir.y!==1
+){
+
+estado.dir={
+x:0,
+y:-1
+};
+
+}
+
+if(
+teclas.ArrowDown &&
+estado.dir.y!==-1
+){
+
+estado.dir={
+x:0,
+y:1
+};
+
+}
+
+if(
+estado.tempo%7===0
+){
+
+let cabeca={
+
+x:
+estado.snake[0].x+
+estado.dir.x,
+
+y:
+estado.snake[0].y+
+estado.dir.y
+
+};
+
+cabeca.x=
+(
+cabeca.x+32
+)%32;
+
+cabeca.y=
+(
+cabeca.y+18
+)%18;
+
+estado.snake.unshift(
+cabeca
+);
+
+if(
+cabeca.x===
+estado.food.x &&
+cabeca.y===
+estado.food.y
+){
+
+estado.pontos+=25;
+
+estado.food={
+
+x:
+Math.floor(
+Math.random()*32
+),
+
+y:
+Math.floor(
+Math.random()*18
+)
+
+};
+
+}else{
+
+estado.snake.pop();
+
+}
+
+}
+
+ctx.fillStyle=
+"#ff4055";
+
+ctx.fillRect(
+
+estado.food.x*40+5,
+
+estado.food.y*40+5,
+
+30,
+
+30
+
+);
+
+ctx.fillStyle=
+"#38e07b";
+
+estado.snake.forEach(
+a=>{
+
+ctx.fillRect(
+
+a.x*40+3,
+
+a.y*40+3,
+
+34,
+
+34
+
+);
+
+});
+
+}
+
+/* CONTROLE TV */
+
+document.addEventListener(
+"keydown",
+e=>{
+
+teclas[e.key]=true;
+
+if(
+e.key==="Enter" ||
+e.key===" "
+){
+
+teclas.acao=true;
+
+}
+
+if(jogo){
+
+e.preventDefault();
+
+}
+
+}
+);
+
+document.addEventListener(
+"keyup",
+e=>{
+
+teclas[e.key]=false;
+
+if(
+e.key==="Enter" ||
+e.key===" "
+){
+
+teclas.acao=false;
+
+}
+
+}
+);
+
+/* CELULAR */
+
+canvas.addEventListener(
+"pointerdown",
+e=>{
+
+const r=
+canvas.getBoundingClientRect();
+
+estado.player.x=
+(
+e.clientX-
+r.left
+)/
+r.width*
+1280;
+
+estado.player.y=
+(
+e.clientY-
+r.top
+)/
+r.height*
+720;
+
+teclas.acao=true;
+
+}
+);
+
+canvas.addEventListener(
+"pointermove",
+e=>{
+
+if(
+!e.buttons
+)return;
+
+const r=
+canvas.getBoundingClientRect();
+
+estado.player.x=
+(
+e.clientX-
+r.left
+)/
+r.width*
+1280;
+
+estado.player.y=
+(
+e.clientY-
+r.top
+)/
+r.height*
+720;
+
+}
+);
+
+canvas.addEventListener(
+"pointerup",
+()=>{
+
+teclas.acao=false;
+
+}
+);
+
+document.getElementById(
+"close"
+).onclick=
+fechar;
+
+document.getElementById(
+"restart"
+).onclick=
+iniciar;
+
+</script>
+
+</body>
+  </html>
