@@ -1,8 +1,10 @@
-
 name: Gerar APK Pinhoplay TV V2
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - principal
 
 jobs:
   build:
