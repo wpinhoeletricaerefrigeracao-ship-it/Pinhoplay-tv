@@ -1,1 +1,219 @@
 
+name: Gerar APK Pinhoplay TV V2
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Criar projeto Android TV
+        shell: bash
+        run: |
+          mkdir -p app/src/main/java/com/pinhoplay/tv
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/values
+
+          cat > settings.gradle <<'EOF'
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+
+          rootProject.name = "PinhoplayTV"
+          include(":app")
+          EOF
+
+          cat > build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+
+          cat > gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          EOF
+
+          cat > app/build.gradle <<'EOF'
+          plugins {
+              id 'com.android.application'
+          }
+
+          android {
+              namespace 'com.pinhoplay.tv'
+              compileSdk 35
+
+              defaultConfig {
+                  applicationId "com.pinhoplay.tv"
+                  minSdk 23
+                  targetSdk 35
+                  versionCode 2
+                  versionName "1.1"
+              }
+          }
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <uses-permission android:name="android.permission.INTERNET"/>
+
+              <uses-feature
+                  android:name="android.software.leanback"
+                  android:required="false"/>
+
+              <uses-feature
+                  android:name="android.hardware.touchscreen"
+                  android:required="false"/>
+
+              <application
+                  android:allowBackup="false"
+                  android:theme="@style/AppTheme"
+                  android:label="Pinhoplay">
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="landscape">
+
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN"/>
+                          <category android:name="android.intent.category.LAUNCHER"/>
+                          <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+                      </intent-filter>
+
+                  </activity>
+
+              </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+              <style
+                  name="AppTheme"
+                  parent="@android:style/Theme.Material.NoActionBar">
+
+                  <item name="android:windowFullscreen">true</item>
+                  <item name="android:windowBackground">#000000</item>
+                  <item name="android:navigationBarColor">#000000</item>
+
+              </style>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/layout/activity_main.xml <<'EOF'
+          <FrameLayout
+              xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#000000">
+
+              <WebView
+                  android:id="@+id/web"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:focusable="true"
+                  android:focusableInTouchMode="true"/>
+
+          </FrameLayout>
+          EOF
+
+          cat > app/src/main/java/com/pinhoplay/tv/MainActivity.java <<'EOF'
+          package com.pinhoplay.tv;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.view.KeyEvent;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+
+              private WebView web;
+
+              private static final String HOME =
+                  "https://wpinhoeletricaerefrigeracao-ship-it.github.io/Pinhoplay/";
+
+              @Override
+              protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstance);
+
+                  setContentView(R.layout.activity_main);
+
+                  web = findViewById(R.id.web);
+
+                  WebSettings settings = web.getSettings();
+
+                  settings.setJavaScriptEnabled(true);
+                  settings.setDomStorageEnabled(true);
+                  settings.setMediaPlaybackRequiresUserGesture(false);
+
+                  web.setWebChromeClient(new WebChromeClient());
+                  web.setWebViewClient(new WebViewClient());
+
+                  web.requestFocus();
+
+                  web.loadUrl(HOME);
+              }
+
+              @Override
+              public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+                  if (keyCode == KeyEvent.KEYCODE_BACK) {
+
+                      if (web.canGoBack()) {
+                          web.goBack();
+                      } else {
+                          finish();
+                      }
+
+                      return true;
+                  }
+
+                  return super.onKeyDown(keyCode, event);
+              }
+          }
+          EOF
+
+      - name: Gerar APK
+        run: gradle :app:assembleDebug
+
+      - name: Renomear APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk Pinhoplay-TV-V2.apk
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pinhoplay-TV-V2-APK
+          path: Pinhoplay-TV-V2.apk
