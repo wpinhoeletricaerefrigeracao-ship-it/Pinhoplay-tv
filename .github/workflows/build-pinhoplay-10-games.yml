@@ -1,0 +1,278 @@
+name: Gerar APK Pinhoplay TV V43.4 - 10 Games
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Conferir Pinhoplay V43.4
+        shell: bash
+        run: |
+          test -f index_Pinhoplay_V43_4_10_GAMES_FUNCIONANDO.html || {
+            echo "ERRO: index_Pinhoplay_V43_4_10_GAMES_FUNCIONANDO.html nao encontrado"
+            ls -la
+            exit 1
+          }
+
+      - name: Criar projeto Android
+        shell: bash
+        run: |
+          mkdir -p app/src/main/java/com/pinhoplay/tv
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/assets
+
+          cp index_Pinhoplay_V43_4_10_GAMES_FUNCIONANDO.html app/src/main/assets/index.html
+
+          cat > settings.gradle <<'EOF'
+          pluginManagement {
+            repositories {
+              google()
+              mavenCentral()
+              gradlePluginPortal()
+            }
+          }
+          dependencyResolutionManagement {
+            repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+            repositories {
+              google()
+              mavenCentral()
+            }
+          }
+          rootProject.name = "PinhoplayTV"
+          include(":app")
+          EOF
+
+          cat > build.gradle <<'EOF'
+          plugins {
+            id 'com.android.application' version '8.7.3' apply false
+          }
+          EOF
+
+          cat > gradle.properties <<'EOF'
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          EOF
+
+          cat > app/build.gradle <<'EOF'
+          plugins {
+            id 'com.android.application'
+          }
+
+          android {
+            namespace 'com.pinhoplay.tv'
+            compileSdk 35
+
+            defaultConfig {
+              applicationId "com.pinhoplay.tv"
+              minSdk 23
+              targetSdk 35
+              versionCode 434
+              versionName "4.3.4"
+            }
+          }
+          EOF
+
+          cat > app/src/main/res/values/styles.xml <<'EOF'
+          <resources>
+            <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+              <item name="android:windowFullscreen">true</item>
+              <item name="android:windowBackground">#05070A</item>
+              <item name="android:navigationBarColor">#05070A</item>
+              <item name="android:colorAccent">#E50914</item>
+            </style>
+          </resources>
+          EOF
+
+          cat > app/src/main/res/drawable/pinhoplay_icon.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="512dp"
+              android:height="512dp"
+              android:viewportWidth="512"
+              android:viewportHeight="512">
+            <path android:fillColor="#07090D" android:pathData="M0,0h512v512h-512z"/>
+            <path android:fillColor="#E50914" android:pathData="M160,105L390,256L160,407z"/>
+            <path android:fillColor="#FFFFFF" android:pathData="M72,78h54v356h-54z"/>
+          </vector>
+          EOF
+
+          cat > app/src/main/res/drawable/pinhoplay_banner.xml <<'EOF'
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="320dp"
+              android:height="180dp"
+              android:viewportWidth="320"
+              android:viewportHeight="180">
+            <path android:fillColor="#05070A" android:pathData="M0,0h320v180h-320z"/>
+            <path android:fillColor="#151A22" android:pathData="M150,0h170v180h-170z"/>
+            <path android:fillColor="#E50914" android:pathData="M185,40L270,90L185,140z"/>
+            <path android:fillColor="#FFFFFF" android:pathData="M28,42h18v96h-18z"/>
+            <path android:fillColor="#FFFFFF" android:pathData="M56,42h18v96h-18z"/>
+            <path android:fillColor="#FFFFFF" android:pathData="M84,42h18v96h-18z"/>
+            <path android:fillColor="#E50914" android:pathData="M112,42h18v96h-18z"/>
+          </vector>
+          EOF
+
+          cat > app/src/main/res/layout/activity_main.xml <<'EOF'
+          <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="#05070A">
+            <WebView
+                android:id="@+id/web"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:focusable="true"
+                android:focusableInTouchMode="true"/>
+          </FrameLayout>
+          EOF
+
+          cat > app/src/main/AndroidManifest.xml <<'EOF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+            <uses-permission android:name="android.permission.INTERNET"/>
+
+            <uses-feature
+                android:name="android.software.leanback"
+                android:required="false"/>
+
+            <uses-feature
+                android:name="android.hardware.touchscreen"
+                android:required="false"/>
+
+            <application
+                android:allowBackup="false"
+                android:hardwareAccelerated="true"
+                android:usesCleartextTraffic="true"
+                android:theme="@style/AppTheme"
+                android:label="Pinhoplay"
+                android:icon="@drawable/pinhoplay_icon"
+                android:logo="@drawable/pinhoplay_icon"
+                android:banner="@drawable/pinhoplay_banner">
+
+              <activity
+                  android:name=".MainActivity"
+                  android:exported="true"
+                  android:banner="@drawable/pinhoplay_banner"
+                  android:configChanges="keyboard|keyboardHidden|orientation|screenSize">
+
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN"/>
+                  <category android:name="android.intent.category.LAUNCHER"/>
+                </intent-filter>
+
+                <intent-filter>
+                  <action android:name="android.intent.action.MAIN"/>
+                  <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+                </intent-filter>
+
+              </activity>
+            </application>
+          </manifest>
+          EOF
+
+          cat > app/src/main/java/com/pinhoplay/tv/MainActivity.java <<'EOF'
+          package com.pinhoplay.tv;
+
+          import android.app.Activity;
+          import android.os.Bundle;
+          import android.view.KeyEvent;
+          import android.view.Window;
+          import android.view.WindowManager;
+          import android.webkit.WebChromeClient;
+          import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+
+          public class MainActivity extends Activity {
+
+            private WebView web;
+
+            @Override
+            protected void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+
+              requestWindowFeature(Window.FEATURE_NO_TITLE);
+              getWindow().setFlags(
+                  WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                  WindowManager.LayoutParams.FLAG_FULLSCREEN
+              );
+
+              setContentView(R.layout.activity_main);
+
+              web = findViewById(R.id.web);
+
+              WebSettings settings = web.getSettings();
+              settings.setJavaScriptEnabled(true);
+              settings.setDomStorageEnabled(true);
+              settings.setDatabaseEnabled(true);
+              settings.setMediaPlaybackRequiresUserGesture(false);
+              settings.setAllowFileAccess(true);
+              settings.setAllowContentAccess(true);
+              settings.setAllowFileAccessFromFileURLs(true);
+              settings.setAllowUniversalAccessFromFileURLs(true);
+              settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+              settings.setLoadWithOverviewMode(true);
+              settings.setUseWideViewPort(true);
+
+              web.setWebChromeClient(new WebChromeClient());
+              web.setWebViewClient(new WebViewClient());
+
+              web.setFocusable(true);
+              web.setFocusableInTouchMode(true);
+              web.requestFocus();
+
+              web.loadUrl("file:///android_asset/index.html");
+            }
+
+            @Override
+            public void onBackPressed() {
+              web.evaluateJavascript(
+                  "(window.g10Close && window.g10Close()) ? 'fechou' : 'nao'",
+                  value -> {
+                    if (!"\"fechou\"".equals(value)) {
+                      if (web.canGoBack()) {
+                        web.goBack();
+                      } else {
+                        MainActivity.super.onBackPressed();
+                      }
+                    }
+                  }
+              );
+            }
+
+            @Override
+            public boolean dispatchKeyEvent(KeyEvent event) {
+              return super.dispatchKeyEvent(event);
+            }
+          }
+          EOF
+
+      - name: Gerar APK
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Renomear APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk Pinhoplay-TV-V43-4-10-Games.apk
+
+      - name: Disponibilizar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pinhoplay-TV-V43-4-10-Games-APK
+          path: Pinhoplay-TV-V43-4-10-Games.apk
